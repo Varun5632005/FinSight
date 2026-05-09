@@ -270,64 +270,71 @@ const DashboardOverview = () => {
 
 
       {/* Charts Section */}
-      <motion.div
-        variants={{
-          hidden: { opacity: 0 },
-          show: { opacity: 1, transition: { staggerChildren: 0.15, delayChildren: 0.2 } }
-        }}
-        initial="hidden"
-        animate="show"
-        style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 400px), 1fr))', gap: '1.5rem' }}
-      >
+      {transactions.length > 0 ? (
         <motion.div
-          variants={{ hidden: { opacity: 0, scale: 0.95 }, show: { opacity: 1, scale: 1 } }}
-          whileHover={{ scale: 1.01, boxShadow: 'var(--shadow-xl)' }}
-          transition={{ type: 'spring', stiffness: 250, damping: 20 }}
-          className="card"
-          style={{ minHeight: '350px', height: 'auto', display: 'flex', flexDirection: 'column' }}
+          variants={{
+            hidden: { opacity: 0 },
+            show: { opacity: 1, transition: { staggerChildren: 0.15, delayChildren: 0.2 } }
+          }}
+          initial="hidden"
+          animate="show"
+          style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 400px), 1fr))', gap: '1.5rem' }}
         >
-          <h3 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1.5rem' }}>Balance Trend</h3>
-          <div style={{ flex: 1 }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData}>
-                <defs>
-                  <linearGradient id="colorBalance" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="var(--primary)" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-color)" />
-                <XAxis dataKey="date" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="var(--text-muted)" fontSize={12} axisLine={false} tickLine={false} />
-                <Tooltip contentStyle={{ borderRadius: '8px', backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-color)', color: 'var(--text-main)' }} formatter={(val) => formatCurrency(val)} />
-                <Area type="monotone" dataKey="balance" name="Actual Balance" stroke="var(--primary)" fillOpacity={1} fill="url(#colorBalance)" connectNulls />
-                <Area type="monotone" dataKey="forecast" name="AI Forecast" stroke="#8b5cf6" strokeWidth={3} strokeDasharray="6 6" fillOpacity={0} connectNulls />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </motion.div>
+          <motion.div
+            variants={{ hidden: { opacity: 0, scale: 0.95 }, show: { opacity: 1, scale: 1 } }}
+            whileHover={{ scale: 1.01, boxShadow: 'var(--shadow-xl)' }}
+            transition={{ type: 'spring', stiffness: 250, damping: 20 }}
+            className="card"
+            style={{ minHeight: '350px', height: 'auto', display: 'flex', flexDirection: 'column' }}
+          >
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1.5rem' }}>Balance Trend</h3>
+            <div style={{ flex: 1 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData}>
+                  <defs>
+                    <linearGradient id="colorBalance" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.4} />
+                      <stop offset="95%" stopColor="var(--primary)" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-color)" />
+                  <XAxis dataKey="date" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
+                  <YAxis stroke="var(--text-muted)" fontSize={12} axisLine={false} tickLine={false} />
+                  <Tooltip contentStyle={{ borderRadius: '8px', backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-color)', color: 'var(--text-main)' }} formatter={(val) => formatCurrency(val)} />
+                  <Area type="monotone" dataKey="balance" name="Actual Balance" stroke="var(--primary)" fillOpacity={1} fill="url(#colorBalance)" connectNulls />
+                  <Area type="monotone" dataKey="forecast" name="AI Forecast" stroke="#8b5cf6" strokeWidth={3} strokeDasharray="6 6" fillOpacity={0} connectNulls />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </motion.div>
 
-        <motion.div
-          variants={{ hidden: { opacity: 0, scale: 0.95 }, show: { opacity: 1, scale: 1 } }}
-          whileHover={{ scale: 1.01, boxShadow: 'var(--shadow-xl)' }}
-          transition={{ type: 'spring', stiffness: 250, damping: 20 }}
-          className="card"
-          style={{ minHeight: '450px', height: 'auto', display: 'flex', flexDirection: 'column' }}
-        >
-          <h3 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem' }}>Spending Breakdown</h3>
-          <div style={{ flex: 1 }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie data={expenseByCategory} cx="50%" cy="50%" innerRadius={80} outerRadius={110} paddingAngle={3} dataKey="value" stroke="none">
-                  {expenseByCategory.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
-                </Pie>
-                <Tooltip formatter={(value) => formatCurrency(value)} />
-                <Legend wrapperStyle={{ paddingTop: '20px', display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '10px' }} />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
+          <motion.div
+            variants={{ hidden: { opacity: 0, scale: 0.95 }, show: { opacity: 1, scale: 1 } }}
+            whileHover={{ scale: 1.01, boxShadow: 'var(--shadow-xl)' }}
+            transition={{ type: 'spring', stiffness: 250, damping: 20 }}
+            className="card"
+            style={{ minHeight: '450px', height: 'auto', display: 'flex', flexDirection: 'column' }}
+          >
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem' }}>Spending Breakdown</h3>
+            <div style={{ flex: 1 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={expenseByCategory} cx="50%" cy="50%" innerRadius={80} outerRadius={110} paddingAngle={3} dataKey="value" stroke="none">
+                    {expenseByCategory.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
+                  </Pie>
+                  <Tooltip formatter={(value) => formatCurrency(value)} />
+                  <Legend wrapperStyle={{ paddingTop: '20px', display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '10px' }} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </motion.div>
         </motion.div>
-      </motion.div>
+      ) : (
+        <div style={{ textAlign: 'center', padding: '3rem', background: 'var(--bg-surface)', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
+          <h3 style={{ color: 'var(--text-main)', marginBottom: '0.5rem', fontSize: '1.25rem' }}>No Transactions Yet</h3>
+          <p style={{ color: 'var(--text-muted)' }}>Your dashboard is currently empty. Add your first transaction to unlock AI insights, charts, and trends!</p>
+        </div>
+      )}
 
     </div>
   );

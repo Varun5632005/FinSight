@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { useDashboard } from '../../context/DashboardContext';
 import { LayoutDashboard, Receipt, Settings, PieChart, Menu, X, DollarSign } from 'lucide-react';
 
-const Sidebar = ({ activeTab, setActiveTab, mobileOpen, setMobileOpen }) => {
+const Sidebar = ({ activeTab, setActiveTab, mobileOpen, setMobileOpen, handleLogout }) => {
   const { role, setRole, user } = useDashboard();
   const navItems = [
     { id: 'dashboard', label: 'Dashboard Overview', icon: LayoutDashboard },
@@ -71,7 +71,7 @@ const Sidebar = ({ activeTab, setActiveTab, mobileOpen, setMobileOpen }) => {
           })}
         </div>
         
-        <div className="mobile-only" style={{ marginTop: 'auto', padding: '1rem 1.5rem', borderTop: '1px solid var(--border-color)' }}>
+        <div style={{ marginTop: 'auto', padding: '1rem 1.5rem', borderTop: '1px solid var(--border-color)' }}>
           <div style={{ marginBottom: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
              <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '1px' }}>Access Mode</p>
              <div style={{ display: 'flex', background: 'var(--bg-color)', padding: '0.3rem', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
@@ -88,6 +88,12 @@ const Sidebar = ({ activeTab, setActiveTab, mobileOpen, setMobileOpen }) => {
           <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 500, opacity: 0.6 }}>
             &copy; 2026 FinSight Hub
           </div>
+          <button 
+            onClick={handleLogout}
+            style={{ width: '100%', marginTop: '1rem', padding: '0.75rem', border: 'none', borderRadius: '8px', background: 'var(--danger-bg)', color: 'var(--danger-text)', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+          >
+            Logout
+          </button>
         </div>
       </div>
       

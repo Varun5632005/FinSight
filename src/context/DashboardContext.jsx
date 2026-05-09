@@ -9,18 +9,10 @@ export const DashboardProvider = ({ children }) => {
   // Try to load from local storage
   const STORAGE_VERSION = '2.0';
 
-  const [transactions, setTransactions] = useState(() => {
-    const saved = localStorage.getItem('finance-dashboard-transactions');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        return []; 
-      }
-    }
-    // New device starts with clean slate
-    return []; 
-  });
+  const [transactions, setTransactions] = useState([]);
+  const [transactionsLoaded, setTransactionsLoaded] = useState(false);
+
+
 
   const [role, setRole] = useState('Viewer'); // 'Viewer' or 'Admin'
   const [notifications, setNotifications] = useState([]);
@@ -59,16 +51,45 @@ export const DashboardProvider = ({ children }) => {
   });
 
   const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem('finance-dashboard-user');
+    const saved = localStorage.getItem('finsight_auth');
     if (saved) {
        try { 
-         const parsed = JSON.parse(saved); 
-         if (parsed.name.includes('User')) return { name: 'Varun', email: 'varun@zorvyn.app' };
-         return parsed;
+         return JSON.parse(saved);
        } catch (e) { }
     }
-    return { name: 'Varun', email: 'varun@zorvyn.app' };
+    return null;
   });
+
+  // Fetch transactions from MongoDB on load
+  useEffect(() => {
+    // Clear transactions and notifications when a new user logs in to prevent data bleed
+    setTransactions([]);
+    setTransactionsLoaded(false);
+    setNotifications([]);
+    setBudgetAlert(null);
+
+    const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+    const fetchTransactions = async () => {
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/transactions`, {
+          credentials: 'include', // Sends the secure JWT cookie
+          cache: 'no-store' // Prevents browser from caching previous user's data
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setTransactions(data);
+          setTransactionsLoaded(true);
+        }
+      } catch (err) {
+        console.error('Failed to fetch transactions from MongoDB', err);
+      }
+    };
+    
+    // Only fetch if we have a valid logged-in user
+    if (user && user.email) {
+      fetchTransactions();
+    }
+  }, [user]);
   
   const [initialBalance, setInitialBalance] = useState(() => {
     const saved = localStorage.getItem('finance-dashboard-initial-balance');
@@ -113,10 +134,7 @@ export const DashboardProvider = ({ children }) => {
     }
   };
 
-  // Persist transactions explicitly
-  useEffect(() => {
-    localStorage.setItem('finance-dashboard-transactions', JSON.stringify(transactions));
-  }, [transactions]);
+  // No longer persist transactions to local storage, they are in MongoDB now!
 
   // Persist theme
   useEffect(() => {
@@ -130,7 +148,11 @@ export const DashboardProvider = ({ children }) => {
   }, [currency]);
 
   useEffect(() => {
-    localStorage.setItem('finance-dashboard-user', JSON.stringify(user));
+    if (user) {
+      localStorage.setItem('finsight_auth', JSON.stringify(user));
+    } else {
+      localStorage.removeItem('finsight_auth');
+    }
   }, [user]);
 
   useEffect(() => {
@@ -192,7 +214,20 @@ export const DashboardProvider = ({ children }) => {
       }
     }
     
+    // Optimistic update
     setTransactions(prev => [cleanTx, ...prev]);
+
+    const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+    // Save to MongoDB
+    fetch(`${BACKEND_URL}/api/transactions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(cleanTx)
+    }).catch(err => {
+      console.error('Failed to save to database', err);
+      addNotification('Failed to save transaction to cloud', 'danger');
+    });
   };
 
   const bulkAddTransactions = (newList) => {
@@ -207,7 +242,21 @@ export const DashboardProvider = ({ children }) => {
       return [...filteredNew, ...prev];
     });
     
-    addNotification(`Successfully synced ${valid.length} transactions from cloud.`, 'success');
+    const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+    // Save bulk data to MongoDB
+    fetch(`${BACKEND_URL}/api/transactions/bulk`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ transactions: valid })
+    }).then(res => {
+      if (res.ok) {
+        addNotification(`Successfully synced ${valid.length} transactions to MongoDB!`, 'success');
+      }
+    }).catch(err => {
+      console.error(err);
+      addNotification('Bulk sync failed to connect to cloud', 'danger');
+    });
   };
 
   const editTransaction = (id, updatedTx) => {
@@ -220,6 +269,13 @@ export const DashboardProvider = ({ children }) => {
   const deleteTransaction = (id) => {
     if (role !== 'Admin') return;
     setTransactions(prev => prev.filter(tx => tx.id !== id));
+
+    const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+    // Delete from MongoDB
+    fetch(`${BACKEND_URL}/api/transactions/${id}`, {
+      method: 'DELETE',
+      credentials: 'include'
+    }).catch(err => console.error('Failed to delete transaction', err));
   };
 
   return (
